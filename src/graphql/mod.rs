@@ -1,17 +1,12 @@
-pub mod types;
-
+mod mutation;
 mod query;
 
-use self::query::Query;
+use self::{mutation::Mutation, query::Query};
 use crate::context::Context;
-use juniper::{EmptyMutation, EmptySubscription, RootNode};
+use juniper::{EmptySubscription, RootNode};
 
-type Schema = RootNode<'static, Query, EmptyMutation<Context>, EmptySubscription<Context>>;
+type Schema = RootNode<'static, Query, Mutation, EmptySubscription<Context>>;
 
 pub fn schema() -> Schema {
-    Schema::new(
-        Query,
-        EmptyMutation::<Context>::new(),
-        EmptySubscription::<Context>::new(),
-    )
+    Schema::new(Query, Mutation, EmptySubscription::<Context>::new())
 }
