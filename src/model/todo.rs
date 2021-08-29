@@ -26,7 +26,11 @@ impl Todo {
             r#"
                 INSERT INTO todos (user_id, name, status)
                 VALUES ($1, $2, $3)
-                RETURNING id as "id: _", user_id as "user_id: _", name, status as "status: _"
+                RETURNING
+                  id as "id: _",
+                  user_id as "user_id: _",
+                  name,
+                  status as "status: _"
             "#,
             user_id as _,
             name,
@@ -40,7 +44,11 @@ impl Todo {
         Ok(sqlx::query_as!(
             Self,
             r#"
-                SELECT id as "id: _", user_id as "user_id: _", name, status as "status: _"
+                SELECT
+                  id as "id: _",
+                  user_id as "user_id: _",
+                  name,
+                  status as "status: _"
                 FROM todos
                 WHERE user_id = $1
                 ORDER BY id

@@ -19,7 +19,9 @@ impl User {
             r#"
                 INSERT INTO users (name)
                 VALUES ($1)
-                RETURNING id as "id: _", name
+                RETURNING
+                  id as "id: _",
+                  name
             "#,
             name
         )
@@ -30,7 +32,13 @@ impl User {
     pub async fn find(connection: &mut DbConnection, id: Id<User>) -> Result<Self> {
         Ok(sqlx::query_as!(
             Self,
-            r#"SELECT id as "id: _", name FROM users WHERE id = $1"#,
+            r#"
+                SELECT
+                  id as "id: _",
+                  name
+                FROM users
+                WHERE id = $1
+            "#,
             id as _
         )
         .fetch_one(connection)
