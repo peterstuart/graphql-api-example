@@ -2,7 +2,7 @@ use crate::{
     model::{Status, Todo, User},
     Context, GraphQLResult,
 };
-use juniper::graphql_object;
+use juniper::{graphql_object, ID};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Mutation;
@@ -17,12 +17,12 @@ impl Mutation {
 
     async fn create_todo(
         context: &Context,
-        user_id: i32,
+        user_id: ID,
         name: String,
         status: Status,
     ) -> GraphQLResult<Todo> {
         let mut connection = context.connection().await?;
 
-        Ok(Todo::create(&mut connection, user_id, &name, status).await?)
+        Ok(Todo::create(&mut connection, user_id.into(), &name, status).await?)
     }
 }

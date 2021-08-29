@@ -1,6 +1,6 @@
 use crate::{
     context::{Context, DbConnection},
-    model::{Status, User},
+    model::{Id, Status, User},
     GraphQLResult, Result,
 };
 use juniper::graphql_object;
@@ -8,8 +8,8 @@ use sqlx::FromRow;
 
 #[derive(Clone, Debug, FromRow)]
 pub struct Todo {
-    id: i32,
-    user_id: i32,
+    id: Id<Todo>,
+    user_id: Id<User>,
     name: String,
     status: Status,
 }
@@ -17,7 +17,7 @@ pub struct Todo {
 impl Todo {
     pub async fn create(
         connection: &mut DbConnection,
-        user_id: i32,
+        user_id: Id<User>,
         name: &str,
         status: Status,
     ) -> Result<Self> {
@@ -26,9 +26,9 @@ impl Todo {
             r#"
                 INSERT INTO todos (user_id, name, status)
                 VALUES ($1, $2, $3)
-                RETURNING id, user_id, name, status as "status: _"
+                RETURNING id as "id: _", user_id as "user_id: _", name, status as "status: _"
             "#,
-            user_id,
+            user_id as _,
             name,
             status as _
         )
@@ -36,16 +36,16 @@ impl Todo {
         .await?)
     }
 
-    pub async fn with_user(connection: &mut DbConnection, user_id: i32) -> Result<Vec<Self>> {
+    pub async fn with_user(connection: &mut DbConnection, user_id: Id<User>) -> Result<Vec<Self>> {
         Ok(sqlx::query_as!(
             Self,
             r#"
-                SELECT id, user_id, name, status as "status: _"
+                SELECT id as "id: _", user_id as "user_id: _", name, status as "status: _"
                 FROM todos
                 WHERE user_id = $1
                 ORDER BY id
             "#,
-            user_id
+            user_id as _
         )
         .fetch_all(connection)
         .await?)
@@ -54,8 +54,8 @@ impl Todo {
 
 #[graphql_object(context = Context)]
 impl Todo {
-    fn id(&self) -> i32 {
-        self.id
+    fn id(&self) -> juniper::ID {
+        self.id.into()
     }
 
     async fn user(&self, context: &Context) -> GraphQLResult<User> {
