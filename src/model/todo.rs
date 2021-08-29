@@ -21,23 +21,34 @@ impl Todo {
         name: &str,
         status: Status,
     ) -> Result<Self> {
-        Ok(sqlx::query_as::<_, Self>(
-            "INSERT INTO todos (user_id, name, status) VALUES ($1, $2, $3) RETURNING *",
+        Ok(sqlx::query_as!(
+            Self,
+            r#"
+                INSERT INTO todos (user_id, name, status)
+                VALUES ($1, $2, $3)
+                RETURNING id, user_id, name, status as "status: _"
+            "#,
+            user_id,
+            name,
+            status as _
         )
-        .bind(user_id)
-        .bind(name)
-        .bind(status)
         .fetch_one(connection)
         .await?)
     }
 
     pub async fn with_user(connection: &mut DbConnection, user_id: i32) -> Result<Vec<Self>> {
-        Ok(
-            sqlx::query_as::<_, Self>("SELECT * FROM todos WHERE user_id = $1 ORDER BY id")
-                .bind(user_id)
-                .fetch_all(connection)
-                .await?,
+        Ok(sqlx::query_as!(
+            Self,
+            r#"
+                SELECT id, user_id, name, status as "status: _"
+                FROM todos
+                WHERE user_id = $1
+                ORDER BY id
+            "#,
+            user_id
         )
+        .fetch_all(connection)
+        .await?)
     }
 }
 
